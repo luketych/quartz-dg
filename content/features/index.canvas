@@ -1,0 +1,8 @@
+{
+	"nodes":[
+		{"id":"ae5f0b28b7d3d481","x":-206,"y":-121,"width":400,"height":400,"type":"file","file":"features/sorting-support.md"},
+		{"id":"97ee3d972e2863de","x":423,"y":-80,"width":400,"height":400,"type":"file","file":"features/sort-controls-ui.md"},
+		{"id":"ac2be5dd03bf2e21","x":-100,"y":360,"width":400,"height":400,"type":"file","file":"features/all-action-type-filter.md"}
+	],
+	"edges":[]
+}

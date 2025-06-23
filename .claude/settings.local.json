@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:quartz.jzhao.xyz)",
+      "Bash(node:*)",
+      "Bash(npm --version)",
+      "Bash(npx quartz build:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(unset YARN_IGNORE_PATH)",
+      "Bash(NODE_OPTIONS=\"--loader=./quartz/bootstrap-cli.mjs\" npx quartz build --serve)",
+      "Bash(export YARN_IGNORE_PATH=1)",
+      "Bash(npm run check:*)",
+      "Bash(npm run format:*)",
+      "Bash(YARN_IGNORE_PATH=1 npx quartz build --serve)",
+      "Bash(NODE_OPTIONS=\"--no-deprecation\" PNP_IGNORE_PATH=1 YARN_IGNORE_PATH=1 npx --node-options=\"--no-deprecation\" quartz build --serve)",
+      "Bash(mv:*)"
+    ],
+    "deny": []
+  }
+}
