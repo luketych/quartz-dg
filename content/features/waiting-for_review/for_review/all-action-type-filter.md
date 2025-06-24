@@ -3,7 +3,7 @@
 ## Overview
 New Action Type: "All" - allows viewing all rating action types at once instead of filtering by a specific type.
 
-![[../attachments/action_type.png]]
+![[../../../attachments/action_type.png]]
 
 ## Status
 ⏳ **Pending**

@@ -11,13 +11,13 @@ This proposal outlines a comprehensive plan to implement three remaining fronten
 
 ### Existing Sprint Documents
 - **Previous Sprint Proposal**: [`../sprint_proposals/2025_06_22-api_frontend_enhancement.md`](2025_06_22-api_frontend_enhancement.md)
-- **Original Implementation Plan**: [`2025_06_12/20_16/proposed_implementation_and_milestones.md`](2025_06_12/20_16/proposed_implementation_and_milestones.md)
+- **Original Implementation Plan**: [`2025_06_12/20_16/proposed_implementation_and_milestones.md`](../../features/implementation_proposals/feature_proposal-frontend_backend-api_design-svelte.md)
 - **Milestones Overview**: [`2025_06_12/20_16/milestones.md`](2025_06_12/20_16/milestones.md)
 
 ### Feature Specifications
-- **All Action Type Filter**: [`all-action-type-filter.md`](all-action-type-filter.md)
-- **Sort Controls UI**: [`sort-controls-ui.md`](sort-controls-ui.md)
-- **Sorting Support**: [`sorting-support.md`](sorting-support.md)
+- **All Action Type Filter**: [`all-action-type-filter.md`](../../features/waiting-for_review/for_review/all-action-type-filter.md)
+- **Sort Controls UI**: [`sort-controls-ui.md`](../../features/someday-maybe/sort-controls-ui.md)
+- **Sorting Support**: [`sorting-support.md`](../../features/actionable/sorting-support.md)
 
 ### Completed Features Reference
 - **Backend API Enhancements**: [`completed/backend-api-enhancements.md`](completed/backend-api-enhancements.md)
@@ -62,7 +62,7 @@ This proposal outlines a comprehensive plan to implement three remaining fronten
 
 **Git Branch:** `feature/all-action-type-filter`
 
-**Reference Implementation**: See [`all-action-type-filter.md`](all-action-type-filter.md) for detailed specifications
+**Reference Implementation**: See [`all-action-type-filter.md`](../../features/waiting-for_review/for_review/all-action-type-filter.md) for detailed specifications
 
 ### Sprint 2: Sort Controls UI Implementation (1.5 weeks)
 
@@ -88,7 +88,7 @@ This proposal outlines a comprehensive plan to implement three remaining fronten
 
 **Git Branch:** `feature/sort-controls-ui`
 
-**Reference Implementation**: See [`sort-controls-ui.md`](sort-controls-ui.md) for UI specifications
+**Reference Implementation**: See [`sort-controls-ui.md`](../../features/someday-maybe/sort-controls-ui.md) for UI specifications
 
 ### Sprint 3: Complete Sorting Integration & Polish (1 week)
 
@@ -112,7 +112,7 @@ This proposal outlines a comprehensive plan to implement three remaining fronten
 
 **Git Branch:** `feature/sorting-integration`
 
-**Reference Implementation**: See [`sorting-support.md`](sorting-support.md) for backend integration details
+**Reference Implementation**: See [`sorting-support.md`](../../features/actionable/sorting-support.md) for backend integration details
 
 ### Sprint 4: Integration Testing & Documentation (0.5 weeks)
 

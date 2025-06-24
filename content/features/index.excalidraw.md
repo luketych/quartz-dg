@@ -10,11 +10,11 @@ tags: [excalidraw]
 # Excalidraw Data
 
 ## Text Elements
-[[all-action-type-filter]] ^nBnuaSGI
+[[waiting-for_review/for_review/all-action-type-filter]] ^nBnuaSGI
 
 THEN ^GcoaCUiW
 
-[[sort-controls-ui]] ^YYPhgtQD
+[[someday-maybe/sort-controls-ui]] ^YYPhgtQD
 
 ## Element Links
 TVD4XPKE: https://luketych.github.io/quartz-dg/documentation/feathersjs-custom_environment_variables

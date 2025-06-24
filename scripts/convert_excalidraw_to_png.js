@@ -14,21 +14,15 @@ async function main() {
   const page = await browser.newPage();
 
   try {
-    // We need to load the library using an ES module import.
-    // We can do this by setting the page content to an HTML
-    // with a <script type="module"> tag.
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <body>
-          <script type="module">
-            import { exportToBlob } from 'https://unpkg.com/@excalidraw/excalidraw@0.17.3/dist/index.modern.js';
-            window.ExcalidrawUtils = { exportToBlob };
-          </script>
-        </body>
-      </html>
-    `;
-    await page.setContent(html, { waitUntil: 'load' });
+    // Load React and ReactDOM, which are peer dependencies of Excalidraw.
+    await page.addScriptTag({ url: 'https://unpkg.com/react@18.2.0/umd/react.production.min.js' });
+    await page.addScriptTag({ url: 'https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js' });
+
+    // Now, load the UMD build of the Excalidraw library.
+    await page.addScriptTag({ url: 'https://unpkg.com/@excalidraw/excalidraw@0.17.3/dist/excalidraw.production.min.js' });
+
+    // Wait for the library to be fully initialized and expose its global
+    await page.waitForFunction('window.ExcalidrawLib');
 
     const fileContent = await fs.readFile(excalidrawPath, 'utf-8');
     const regex = /```compressed-json\n([\s\S]*?)\n```/;
@@ -45,7 +39,7 @@ async function main() {
 
     // Use page.evaluate to run code within the browser's context
     const base64Data = await page.evaluate(async ({ elements, appState }) => {
-      const blob = await window.ExcalidrawUtils.exportToBlob({
+      const blob = await window.ExcalidrawLib.exportToBlob({
         elements,
         appState,
         files: {},
