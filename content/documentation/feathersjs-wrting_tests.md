@@ -1,57 +1,83 @@
-Writing tests
+# Writing tests[​](https://feathersjs.com/guides/basics/testing#writing-tests)
+
 The best way to test an application is by writing tests that make sure it behaves to clients as we would expect. Feathers makes testing your application a lot easier because the services we create can be tested directly instead of having to fake HTTP requests and responses. In this chapter we will implement unit tests for our users and messages services.
 
 You can run code linting and Mocha tests with:
 
+sh
 
+```
 npm test
+```
+
 This should already pass but it won't be testing any of the functionality we added in the guide so far.
 
-Test database setup
-When testing database functionality, we want to make sure that the tests use a different database. We can achieve this by updating the test environment configuration in config/test.json with the following content:
+## Test database setup[​](https://feathersjs.com/guides/basics/testing#test-database-setup)
 
+When testing database functionality, we want to make sure that the tests use a different database. We can achieve this by updating the test environment configuration in `config/test.json` with the following content:
 
+json
+
+```
 {
   "nedb": "../test/data"
 }
-This will set up the NeDB database to use test/data as the base directory instead of data/ when the NODE_ENV environment variable is set to test. The same thing can be done with connection strings for other databases.
+```
+
+This will set up the NeDB database to use `test/data` as the base directory instead of `data/` when the `NODE_ENV` environment variable is set to `test`. The same thing can be done with connection strings for other databases.
 
 Important
 
-When using Git for version control, the data/ and test/data folders should be added to .gitignore.
+When using Git for version control, the `data/` and `test/data` folders should be added to `.gitignore`.
 
 We also want to make sure that the database is cleaned up before every test run. To make that possible across platforms, first run:
 
+sh
 
+```
 npm install shx --save-dev
-Now we can update the scripts section of our package.json to the following:
+```
 
+Now we can update the `scripts` section of our `package.json` to the following:
 
+json
+
+```
   "scripts": {
-    "test": "npm run eslint && npm run mocha",
-    "eslint": "eslint src/. test/. --config .eslintrc.json",
-    "start": "node src/",
+    "test": "npm run compile && npm run mocha",
+    "dev": "ts-node-dev --no-notify src/",
+    "start": "npm run compile && node lib/",
     "clean": "shx rm -rf test/data/",
-    "mocha": "npm run clean && NODE_ENV=test mocha test/ --recursive --exit"
-  }
-On Windows the mocha command should look like this:
+    "mocha": "npm run clean && NODE_ENV=test ts-mocha \"test/**/*.ts\" --recursive --exit",
+    "compile": "shx rm -rf lib/ && tsc"
+  },
+```
 
+On Windows the `mocha` command should look like this:
 
+sh
+
+```
 npm run clean & SET NODE_ENV=test& mocha test/ --recursive --exit
-This will make sure that the test/data folder is removed before every test run and NODE_ENV is set properly.
+```
 
-Testing services
-To test the messages and users services (with all hooks wired up), we could use any REST API testing tool to make requests and verify that they return correct responses.
+This will make sure that the `test/data` folder is removed before every test run and `NODE_ENV` is set properly.
 
-There is a much faster, easier and complete approach. Since everything on top of our own hooks and services is already provided (and tested) by Feathers, we can require the application object and use the service methods directly. We "fake" authentication by setting params.user manually.
+## Testing services[​](https://feathersjs.com/guides/basics/testing#testing-services)
+
+To test the `messages` and `users` services (with all hooks wired up), we could use any REST API testing tool to make requests and verify that they return correct responses.
+
+There is a much faster, easier and complete approach. Since everything on top of our own hooks and services is already provided (and tested) by Feathers, we can require the [application](https://feathersjs.com/api/application.html) object and use the [service methods](https://feathersjs.com/api/services.html) directly. We "fake" authentication by setting `params.user` manually.
 
 By default, the generator creates a service test file that only tests that the service exists.
 
-E.g. like this in test/services/users.test.js:
+E.g. like this in `test/services/users.test.ts`:
 
+ts
 
-const assert = require('assert');
-const app = require('../../src/app');
+```
+import assert from 'assert';
+import app from '../../src/app';
 
 describe('\'users\' service', () => {
   it('registered the service', () => {
@@ -60,15 +86,20 @@ describe('\'users\' service', () => {
     assert.ok(service, 'Registered the service');
   });
 });
+```
+
 We can then add similar tests that use the service. In this case we are:
 
-verifying that users can be created, the default profile image gets set and the password is encrypted
-ensuring that the password does not get sent to external requests
-Replace test/services/users.test.js with the following:
+1. verifying that users can be created, the default profile image gets set and the password is encrypted
+2. ensuring that the password does not get sent to external requests
 
+Replace `test/services/users.test.ts` with the following:
 
-const assert = require('assert');
-const app = require('../../src/app');
+ts
+
+```
+import assert from 'assert';
+import app from '../../src/app';
 
 describe('\'users\' service', () => {
   it('registered the service', () => {
@@ -102,13 +133,17 @@ describe('\'users\' service', () => {
     assert.ok(!user.password);
   });
 });
-We take a similar approach for the messages service test by creating a test-specific user from the users service, then pass it as params.user when creating a new message and validates that message's content:
+```
 
-Update test/services/messages.test.js as follows:
+We take a similar approach for the messages service test by creating a test-specific user from the `users` service, then pass it as `params.user` when creating a new message and validates that message's content:
 
+Update `test/services/messages.test.ts` as follows:
 
-const assert = require('assert');
-const app = require('../../src/app');
+ts
+
+```
+import assert from 'assert';
+import app from '../../src/app';
 
 describe('\'messages\' service', () => {
   it('registered the service', () => {
@@ -132,7 +167,7 @@ describe('\'messages\' service', () => {
     }, params);
 
     assert.equal(message.text, 'a test');
-    // `userId` should be set to the provided user's id
+    // `userId` should be set to passed users it
     assert.equal(message.userId, user._id);
     // Additional property has been removed
     assert.ok(!message.additional);
@@ -140,38 +175,80 @@ describe('\'messages\' service', () => {
     assert.deepEqual(message.user, user);
   });
 });
-Run npm test one more time, to verify that all tests are passing.
+```
 
-Code coverage
-Code coverage is a great way to get some insights into how much of our code is actually executed during the tests. Using Istanbul we can add it easily:
+Run `npm test` one more time, to verify that all tests are passing.
 
+## Code coverage[​](https://feathersjs.com/guides/basics/testing#code-coverage)
 
+Code coverage is a great way to get some insights into how much of our code is actually executed during the tests. Using [Istanbul](https://github.com/gotwarlost/istanbul) we can add it easily:
+
+sh
+
+```
 npm install nyc --save-dev
-Now we have to update the scripts section of our package.json to:
+```
 
+For TypeScript we also have to install the TypeScript reporter:
 
+sh
+
+```
+npm install @istanbuljs/nyc-config-typescript --save-dev
+```
+
+Add the following `.nycrc` file:
+
+json
+
+```
+{
+  "extends": "@istanbuljs/nyc-config-typescript",
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ]
+}
+```
+
+And then update the `scripts` section of our `package.json` to:
+
+json
+
+```
   "scripts": {
-    "test": "npm run eslint && npm run coverage",
-    "coverage": "nyc npm run mocha",
-    "eslint": "eslint src/. test/. --config .eslintrc.json",
-    "dev": "nodemon src/",
-    "start": "node src/",
+    "test": "npm run compile && npm run coverage",
+    "dev": "ts-node-dev --no-notify src/",
+    "start": "npm run compile && node lib/",
     "clean": "shx rm -rf test/data/",
-    "mocha": "npm run clean && NODE_ENV=test mocha test/ --recursive --exit"
+    "coverage": "nyc npm run mocha",
+    "mocha": "npm run clean && NODE_ENV=test ts-mocha \"test/**/*.ts\" --recursive --exit",
+    "compile": "shx rm -rf lib/ && tsc"
   },
-On Windows, the coverage command looks like this:
+```
 
+On Windows, the `coverage` command looks like this:
 
+sh
+
+```
 npm run clean & SET NODE_ENV=test& nyc mocha
+```
+
 Now run:
 
+sh
 
+```
 npm test
+```
+
 This will print out some additional coverage information.
 
 Important
 
-When using Git for version control, the .nyc_output/ folder should be added to .gitignore.
+When using Git for version control, the `.nyc_output/` folder should be added to `.gitignore`.
 
-What's next?
-That’s it! Our chat guide is completed! We now have a fully-tested REST and real-time API, with a plain JavaScript frontend including login and signup. Follow up in the Feathers API documentation for more details about using Feathers, or start building your own first Feathers application!
+## What's next?[​](https://feathersjs.com/guides/basics/testing#what-s-next)
+
+That’s it! Our chat guide is completed! We now have a fully-tested REST and real-time API, with a plain JavaScript frontend including login and signup. Follow up in the [Feathers API documentation](https://feathersjs.com/api/) for more details about using Feathers, or start building your own first Feathers application!

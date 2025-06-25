@@ -1,12 +1,16 @@
-Hooks
-Hooks are pluggable middleware functions that can be registered around, before, after or on error(s) of a service method. Multiple hook functions can be chained to create complex work-flows. A hook is transport independent, which means it does not matter if it has been called internally on the server, through HTTP(S) (REST), websockets or any other transport Feathers supports. They are also service agnostic, meaning they can be used with ​any​ service regardless of whether they use a database or not.
+# Hooks[​](https://feathersjs.com/api/hooks#hooks)
 
-Hooks are commonly used to handle things like permissions, validation, logging, authentication, data schemas and resolvers, sending notifications and more. This pattern keeps your application logic flexible, composable, and easier to trace through and debug. For more information about the design patterns behind hooks see this blog post.
+Hooks are pluggable middleware functions that can be registered **around**, **before**, **after** or on **error**(s) of a [service method](https://feathersjs.com/api/services.html). Multiple hook functions can be chained to create complex work-flows. A hook is **transport independent**, which means it does not matter if it has been called internally on the server, through HTTP(S) (REST), websockets or any other transport Feathers supports. They are also service agnostic, meaning they can be used with ​**any**​ service regardless of whether they use a database or not.
 
-Quick Example
-The following example logs the runtime of any service method on the messages service and adds createdAt property before saving the data to the database:
+Hooks are commonly used to handle things like permissions, validation, logging, [authentication](https://feathersjs.com/api/authentication/hook.html), [data schemas and resolvers](https://feathersjs.com/api/schema/), sending notifications and more. This pattern keeps your application logic flexible, composable, and easier to trace through and debug. For more information about the design patterns behind hooks see [this blog post](https://blog.feathersjs.com/api-service-composition-with-hooks-47af13aa6c01).
 
+## Quick Example[​](https://feathersjs.com/api/hooks#quick-example)
 
+The following example logs the runtime of any service method on the `messages` service and adds `createdAt` property before saving the data to the database:
+
+ts
+
+```
 import { feathers, type HookContext, type NextFunction } from '@feathersjs/feathers'
 
 const app = feathers()
@@ -36,30 +40,42 @@ app.service('messages').hooks({
     ]
   }
 })
+```
+
 info
 
-While it is always possible to add properties like createdAt in the above example via hooks, the preferred way to make data modifications like this in Feathers 5 is via schemas and resolvers.
+While it is always possible to add properties like `createdAt` in the above example via hooks, the preferred way to make data modifications like this in Feathers 5 is via [schemas and resolvers](https://feathersjs.com/api/schema/).
 
-Hook functions
-before, after and error
-before, after and error hook functions are functions that are async or return a promise and take the hook context as the parameter and return nothing or throw an error.
+## Hook functions[​](https://feathersjs.com/api/hooks#hook-functions)
 
+### before, after and error[​](https://feathersjs.com/api/hooks#before-after-and-error)
 
+`before`, `after` and `error` hook functions are functions that are `async` or return a promise and take the [hook context](https://feathersjs.com/api/hooks#hook-context) as the parameter and return nothing or throw an error.
+
+ts
+
+```
 import { HookContext } from '../declarations'
 
 export const hookFunction = async (context: HookContext) => {
   // Do things here
 }
-For more information see the hook flow section.
+```
 
-around
-around hooks are a special kind of hook that allow to control the entire before, after and error flow in a single function. They are a Feathers specific version of the generic @feathersjs/hooks. An around hook is an async function that accepts two arguments:
+For more information see the [hook flow](https://feathersjs.com/api/hooks#hook-flow) section.
 
-The hook context
-An asynchronous next function. Somewhere in the body of the hook function, there is a call to await next(), which calls the next hooks OR the original function if all other hooks have run.
+### around[​](https://feathersjs.com/api/hooks#around)
+
+`around` hooks are a special kind of hook that allow to control the entire `before`, `after` and `error` flow in a single function. They are a Feathers specific version of the generic [@feathersjs/hooks](https://github.com/feathersjs/hooks). An `around` hook is an `async` function that accepts two arguments:
+
+- The [hook context](https://feathersjs.com/api/hooks#hook-context)
+- An asynchronous `next` function. Somewhere in the body of the hook function, there is a call to `await next()`, which calls the `next` hooks OR the original function if all other hooks have run.
+
 In its simplest form, an around hook looks like this:
 
+js
 
+```
 import { HookContext, NextFunction } from '../declarations'
 
 export const myAfoundHook = async (context: HookContext, next: NextFunction) => {
@@ -73,26 +89,33 @@ export const myAfoundHook = async (context: HookContext, next: NextFunction) => 
     // Do things always
   }
 }
-Any around hook can be wrapped around another function. Calling await next() will either call the next hook in the chain or the service method if all other hooks have run.
+```
 
-Hook flow
-In general, hooks are executed in the order they are registered with around hooks running first:
+Any around hook can be wrapped around another function. Calling `await next()` will either call the next hook in the chain or the service method if all other hooks have run.
 
-around hooks (before await next())
-before hooks
-service method
-after hooks
-around hooks (after await next())
-Note that since around hooks wrap around everything, the first hook to run will be the last to execute its code after await next(). This is reverse of the order after hooks execute.
+## Hook flow[​](https://feathersjs.com/api/hooks#hook-flow)
+
+In general, hooks are executed in the order [they are registered](https://feathersjs.com/api/hooks#registering-hooks) with `around` hooks running first:
+
+- `around` hooks (before `await next()`)
+- `before` hooks
+- service method
+- `after` hooks
+- `around` hooks (after `await next()`)
+
+Note that since `around` hooks wrap **around** everything, the first hook to run will be the last to execute its code after `await next()`. This is reverse of the order `after` hooks execute.
 
 The hook flow can be affected as follows.
 
-Throwing an error
+### Throwing an error[​](https://feathersjs.com/api/hooks#throwing-an-error)
+
 When an error is thrown (or the promise is rejected), all subsequent hooks - and the service method call if it didn't run already - will be skipped and only the error hooks will run.
 
 The following example throws an error when the text for creating a new message is empty. You can also create very similar hooks to use your Node validation library of choice.
 
+ts
 
+```
 app.service('messages').hooks({
   before: {
     create: [
@@ -104,10 +127,15 @@ app.service('messages').hooks({
     ]
   }
 })
-Setting context.result
-When context.result is set in an around hook before calling await next() or in a before hook, the original service method call will be skipped. All other hooks will still execute in their normal order. The following example always returns the currently authenticated user instead of the actual user for all get method calls:
+```
 
+### Setting `context.result`[​](https://feathersjs.com/api/hooks#setting-context-result)
 
+When `context.result` is set in an `around` hook before calling `await next()` or in a `before` hook, the original [service method](https://feathersjs.com/api/services.html) call will be skipped. All other hooks will still execute in their normal order. The following example always returns the currently [authenticated user](https://feathersjs.com/api/authentication/service.html) instead of the actual user for all `get` method calls:
+
+js
+
+```
 app.service('users').hooks({
   before: {
     get: [
@@ -119,88 +147,110 @@ app.service('users').hooks({
     ]
   }
 })
-Hook context
-The hook context is passed to a hook function and contains information about the service method call. It has read only properties that should not be modified and writeable properties that can be changed for subsequent hooks.
+```
+
+## Hook context[​](https://feathersjs.com/api/hooks#hook-context)
+
+The hook `context` is passed to a hook function and contains information about the service method call. It has **read only** properties that should not be modified and **_writeable_** properties that can be changed for subsequent hooks.
 
 tip
 
-The context object is the same throughout a service method call so it is possible to add properties and use them in other hooks at a later time.
+The `context` object is the same throughout a service method call so it is possible to add properties and use them in other hooks at a later time.
 
 Important
 
-If you want to inspect the hook context, e.g. via console.log, the object returned by context.toJSON() should be used, otherwise you won't see all properties that are available.
+If you want to inspect the hook context, e.g. via `console.log`, the object returned by [context.toJSON()](https://feathersjs.com/api/hooks#contexttojson) should be used, otherwise you won't see all properties that are available.
 
-context.app
-context.app is a read only property that contains the Feathers application object. This can be used to retrieve other services (via context.app.service('name')) or configuration values.
+### `context.app`[​](https://feathersjs.com/api/hooks#context-app)
 
-context.service
-context.service is a read only property and contains the service this hook currently runs on.
+`context.app` is a _read only_ property that contains the [Feathers application object](https://feathersjs.com/api/application.html). This can be used to retrieve other services (via `context.app.service('name')`) or configuration values.
 
-context.path
-context.path is a read only property and contains the service name (or path) without leading or trailing slashes.
+### `context.service`[​](https://feathersjs.com/api/hooks#context-service)
 
-context.method
-context.method is a read only property with the name of the service method (find, get, create, update, patch, remove).
+`context.service` is a _read only_ property and contains the service this hook currently runs on.
 
-context.type
-context.type is a read only property with the hook type (one of around, before, after or error).
+### `context.path`[​](https://feathersjs.com/api/hooks#context-path)
 
-context.params
-context.params is a writeable property that contains the service method parameters (including params.query). For more information see the service params documentation.
+`context.path` is a _read only_ property and contains the service name (or path) without leading or trailing slashes.
 
-context.id
-context.id is a writeable property and the id for a get, remove, update and patch service method call. For remove, update and patch, context.id can also be null when modifying multiple entries. In all other cases it will be undefined.
+### `context.method`[​](https://feathersjs.com/api/hooks#context-method)
 
-context.data
-context.data is a writeable property containing the data of a create, update and patch service method call.
+`context.method` is a _read only_ property with the name of the [service method](https://feathersjs.com/api/services.html) (`find`, `get`, `create`, `update`, `patch`, `remove`).
+
+### `context.type`[​](https://feathersjs.com/api/hooks#context-type)
+
+`context.type` is a _read only_ property with the hook type (one of `around`, `before`, `after` or `error`).
+
+### `context.params`[​](https://feathersjs.com/api/hooks#context-params)
+
+`context.params` is a **writeable** property that contains the [service method](https://feathersjs.com/api/services.html) parameters (including `params.query`). For more information see the [service params documentation](https://feathersjs.com/api/services.html#params).
+
+### `context.id`[​](https://feathersjs.com/api/hooks#context-id)
+
+`context.id` is a **writeable** property and the `id` for a `get`, `remove`, `update` and `patch` service method call. For `remove`, `update` and `patch`, `context.id` can also be `null` when modifying multiple entries. In all other cases it will be `undefined`.
+
+### `context.data`[​](https://feathersjs.com/api/hooks#context-data)
+
+`context.data` is a **writeable** property containing the data of a `create`, `update` and `patch` service method call.
 
 info
 
-context.data will only be available for create, update, patch and custom methods.
+`context.data` will only be available for `create`, `update`, `patch` and [custom methods](https://feathersjs.com/api/services.html#custom-methods).
 
-context.error
-context.error is a writeable property with the error object that was thrown in a failed method call. It can be modified to change the error that is returned at the end.
+### `context.error`[​](https://feathersjs.com/api/hooks#context-error)
+
+`context.error` is a **writeable** property with the error object that was thrown in a failed method call. It can be modified to change the error that is returned at the end.
 
 info
 
-context.error will only be available if context.type is error.
+`context.error` will only be available if `context.type` is `error`.
 
-context.result
-context.result is a writeable property containing the result of the successful service method call. It is only available in after hooks. context.result can also be set in
+### `context.result`[​](https://feathersjs.com/api/hooks#context-result)
 
-An around or before hook to skip the actual service method (database) call
-An error hook to swallow the error and return a result instead
+`context.result` is a **writeable** property containing the result of the successful service method call. It is only available in `after` hooks. `context.result` can also be set in
+
+- An `around` or `before` hook to skip the actual service method (database) call
+- An `error` hook to swallow the error and return a result instead
+
 info
 
-context.result will only be available if context.type is after or if context.result has been set.
+`context.result` will only be available if `context.type` is `after` or if `context.result` has been set.
 
-context.dispatch
-context.dispatch is a writeable, optional property and contains a "safe" version of the data that should be sent to any client. If context.dispatch has not been set context.result will be sent to the client instead. context.dispatch only affects the data sent through a Feathers Transport like REST or Socket.io. An internal method call will still get the data set in context.result.
+### `context.dispatch`[​](https://feathersjs.com/api/hooks#context-dispatch)
+
+`context.dispatch` is a **writeable, optional** property and contains a "safe" version of the data that should be sent to any client. If `context.dispatch` has not been set `context.result` will be sent to the client instead. `context.dispatch` only affects the data sent through a Feathers Transport like [REST](https://feathersjs.com/api/express.html) or [Socket.io](https://feathersjs.com/api/socketio.html). An internal method call will still get the data set in `context.result`.
 
 Important
 
-context.dispatch is used by the schemaHooks.resolveDispatch resolver. Use dispatch resolvers whenever possible to get safe representations external data.
+`context.dispatch` is used by the `schemaHooks.resolveDispatch` [resolver](https://feathersjs.com/api/schema/resolvers.html). Use dispatch resolvers whenever possible to get safe representations external data.
 
-context.http
-context.http is a writeable, optional property that allows customizing HTTP response specific properties. The following properties can be set:
+### `context.http`[​](https://feathersjs.com/api/hooks#context-http)
 
-context.http.status - Sets the HTTP status code that should be returned. Usually the most appropriate status code will be picked automatically but there are cases where it needs to be customized.
-context.http.headers - An object with additional HTTP response headers
-context.http.location - Setting this property will trigger a redirect for HTTP requests.
+`context.http` is a **writeable, optional** property that allows customizing HTTP response specific properties. The following properties can be set:
+
+- `context.http.status` - Sets the [HTTP status code](https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html) that should be returned. Usually the most appropriate status code will be picked automatically but there are cases where it needs to be customized.
+- `context.http.headers` - An object with additional HTTP response headers
+- `context.http.location` - Setting this property will trigger a redirect for HTTP requests.
+
 Important
 
-Setting context.http properties will have no effect when using a websocket real-time connection.
+Setting `context.http` properties will have no effect when using a websocket real-time connection.
 
-context.event
-context.event is a writeable, optional property that allows service events to be skipped by setting it to null
+### `context.event`[​](https://feathersjs.com/api/hooks#context-event)
 
-context.toJSON()
-context.toJSON() returns a full object representation of the hook context and all its properties.
+`context.event` is a **writeable, optional** property that allows service events to be skipped by setting it to `null`
 
-Registering hooks
-Hook functions are registered on a service through the app.service(<servicename>).hooks(hooks) method. The most commonly used registration format is
+### `context.toJSON()`[​](https://feathersjs.com/api/hooks#context-tojson)
 
+`context.toJSON()` returns a full object representation of the hook context and all its properties.
 
+## Registering hooks[​](https://feathersjs.com/api/hooks#registering-hooks)
+
+Hook functions are registered on a service through the `app.service(<servicename>).hooks(hooks)` method. The most commonly used registration format is
+
+js
+
+```
 {
   [type]: { // around, before, after or error
     all: [
@@ -211,9 +261,13 @@ Hook functions are registered on a service through the app.service(<servicename>
     ]
   }
 }
+```
+
 This means usual hook registration looks like this:
 
+ts
 
+```
 // The standard all at once way (also used by the generator)
 // an array of functions per service method name (and for `all` methods)
 app.service('servicename').hooks({
@@ -248,13 +302,17 @@ app.service('servicename').hooks({
   },
   error: {}
 })
+```
+
 warning
 
-Hooks will only be available for the standard service methods or methods passed in options.methods to app.use. See the documentation for @feathersjs/hooks how to use hooks on other methods.
+Hooks will only be available for the standard service methods or methods passed in `options.methods` to [app.use](https://feathersjs.com/api/application.html#usepath-service--options). See the [documentation for @feathersjs/hooks](https://github.com/feathersjs/hooks) how to use hooks on other methods.
 
-Since around hooks offer the same functionality as before, after and error hooks at the same time they can also be registered without a nested object:
+Since around hooks offer the same functionality as `before`, `after` and `error` hooks at the same time they can also be registered without a nested object:
 
+ts
 
+```
 import { HookContext, NextFunction } from './declarations'
 
 // Passing an array of around hooks that run for every method
@@ -279,17 +337,24 @@ app.service('servicename').hooks({
   remove: [],
   myCustomMethod: []
 })
-Application hooks
-Service hooks
-To add hooks to every service app.hooks(hooks) can be used. Application hooks are registered in the same format as service hooks and also work exactly the same. Note when application hooks will be executed:
+```
 
-around application hook will run around all other hooks
-before application hooks will always run before all service before hooks
-after application hooks will always run after all service after hooks
-error application hooks will always run after all service error hooks
+## Application hooks[​](https://feathersjs.com/api/hooks#application-hooks)
+
+### Service hooks[​](https://feathersjs.com/api/hooks#service-hooks)
+
+To add hooks to every service `app.hooks(hooks)` can be used. Application hooks are [registered in the same format as service hooks](https://feathersjs.com/api/hooks#registering-hooks) and also work exactly the same. Note when application hooks will be executed:
+
+- `around` application hook will run around all other hooks
+- `before` application hooks will always run _before_ all service `before` hooks
+- `after` application hooks will always run _after_ all service `after` hooks
+- `error` application hooks will always run _after_ all service `error` hooks
+
 Here is an example for a very useful application hook that logs every service method error with the service and method name as well as the error stack.
 
+ts
 
+```
 import { HookContext } from './declarations'
 
 app.hooks({
@@ -301,10 +366,15 @@ app.hooks({
     ]
   }
 })
-Setup and teardown
-A special kind of application hooks are app.setup and app.teardown hooks. They are around hooks that can be used to initialize database connections etc. and only run once when the application starts or shuts down. Setup and teardown hooks only have context.app and context.server available in the hook context.
+```
 
+### Setup and teardown[​](https://feathersjs.com/api/hooks#setup-and-teardown)
 
+A special kind of application hooks are [app.setup](https://feathersjs.com/api/application.html#setupserver) and [app.teardown](https://feathersjs.com/api/application.html#teardownserver) hooks. They are around hooks that can be used to initialize database connections etc. and only run once when the application starts or shuts down. Setup and teardown hooks only have `context.app` and `context.server` available in the hook context.
+
+ts
+
+```
 import { MongoClient } from 'mongodb'
 
 app.hooks({
@@ -323,3 +393,6 @@ app.hooks({
     }
   ]
 })
+```
+
+[  ](https://github.com/feathersjs/feathers/edit/dove/docs/api/hooks.md)
