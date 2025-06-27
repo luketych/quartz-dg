@@ -24,6 +24,54 @@ jobs:
           json_array=$(echo "$sites" | jq -R . | jq -s -c .)
           echo "matrix={\"site\": $json_array}" >> $GITHUB_OUTPUT
 
+  deploy-root:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to push to gh-pages
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Provision Root Repository
+        env:
+          GH_TOKEN: ${{ secrets.LUKE_QUARTZ_ORG_ADMIN_TOKEN }}
+          ORG_NAME: luke-quartz
+          REPO_NAME: luke-quartz.github.io
+        run: |
+          echo "Checking for repository: $ORG_NAME/$REPO_NAME"
+          if ! gh repo view $ORG_NAME/$REPO_NAME >/dev/null 2>&1; then
+            echo "Repository $ORG_NAME/$REPO_NAME does not exist. Creating..."
+            gh repo create $ORG_NAME/$REPO_NAME --public
+          else
+            echo "Repository $ORG_NAME/$REPO_NAME already exists."
+          fi
+
+      - name: Build Root Site
+        env:
+          BASE_URL: "" # For root org page, base URL is empty
+        run: |
+          mkdir -p temp_content
+          cp content/index.md temp_content/
+          npx quartz build --directory temp_content
+
+      - name: Deploy to Root Repository
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.LUKE_QUARTZ_ORG_ADMIN_TOKEN }}
+          external_repository: luke-quartz/luke-quartz.github.io
+          publish_dir: ./public
+          publish_branch: main # Org pages deploy from main branch
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: "Deploy root site: ${{ github.sha }}"
+
   deploy:
     needs: list-sites
     runs-on: ubuntu-latest
