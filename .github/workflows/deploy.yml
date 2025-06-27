@@ -1,26 +1,35 @@
-name: Deploy All Quartz Sites
+name: Build and Deploy to Organization Repos
 
 on:
   push:
     branches:
-      - luke
+      - feature-unique_urls
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  list-sites:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+
+      - id: set-matrix
+        run: |
+          sites=$(ls -d viscera/content/*/ | xargs -n 1 basename)
+          echo "matrix={\"site\":$(echo $sites | jq -R 'split(\" \")' | jq -c 'map(select(length > 0))')}" >> $GITHUB_OUTPUT
+
+  deploy:
+    needs: list-sites
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1
+      matrix: ${{ fromJson(needs.list-sites.outputs.matrix) }}
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -29,30 +38,13 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
+        working-directory: ./viscera
 
-      - name: Build all sites into subfolders
-        run: |
-          # This script runs inside the 'viscera' directory
-          # Create a directory to hold all built sites first
-          mkdir -p "all-sites"
+      - name: Build Site - ${{ matrix.site }}
+        run: npx quartz build --directory "viscera/content/${{ matrix.site }}"
 
-          SITES=$(ls -d content/*/)
-          for site_path in $SITES
-          do
-            site_name=$(basename "$site_path")
-            echo "--- Building site: $site_name ---"
-            
-            # Set the base URL for this specific build (e.g., /my-repo/site-name)
-            export BASE_URL="/${{ github.event.repository.name }}/$site_name"
-            echo "Using BASE_URL: $BASE_URL"
-            
-            # Run the build, pointing to the content folder inside 'viscera'
-            npx quartz build -d "content/$site_name"
-            
-            # Move the built files to a directory named after the site
-            echo "Moving public/* to all-sites/$site_name"
-            mkdir -p "all-sites/$site_name"
-            mv public/* "all-sites/$site_name"
+      - name: Deploy to luke-quartz/${{ matrix.site }}
+        uses: peaceiris/actions-gh-pages@v4
           done
 
       - name: Upload artifact

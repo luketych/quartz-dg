@@ -1,0 +1,35 @@
+name: Provision Organization Repositories
+
+on:
+  workflow_dispatch:
+
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: List Site Folders and Create Repos
+        env:
+          GH_TOKEN: ${{ secrets.LUKE_QUARTZ_ORG_ADMIN_TOKEN }}
+          ORG_NAME: luke-quartz
+        run: |
+          # List all subdirectories in viscera/content
+          sites=$(ls -d viscera/content/*/ | xargs -n 1 basename)
+
+          echo "Found sites: $sites"
+
+          for site in $sites; do
+            repo_name="$site"
+            echo "Checking for repository: $ORG_NAME/$repo_name"
+
+            # Check if the repository already exists
+            if gh repo view "$ORG_NAME/$repo_name" >/dev/null 2>&1; then
+              echo "Repository $ORG_NAME/$repo_name already exists. Skipping."
+            else
+              echo "Repository $ORG_NAME/$repo_name does not exist. Creating..."
+              gh repo create "luke-quartz/$repo_name" --public --description "Deployment target for the '$site' Quartz site."
+              echo "Successfully created repository $ORG_NAME/$repo_name."
+            fi
+          done
