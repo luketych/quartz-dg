@@ -66,14 +66,8 @@ jobs:
 
       - name: Deploy to luke-quartz/${{ matrix.site }}
         uses: peaceiris/actions-gh-pages@v4
-          done
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
         with:
-          # Upload the directory that contains all the built sites
-          path: ./all-sites
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          personal_token: ${{ secrets.LUKE_QUARTZ_ORG_ADMIN_TOKEN }}
+          external_repository: luke-quartz/${{ matrix.site }}
+          publish_dir: ./public
+          publish_branch: gh-pages
