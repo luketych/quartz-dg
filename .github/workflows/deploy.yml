@@ -9,6 +9,8 @@ on:
 jobs:
   list-sites:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -17,12 +19,14 @@ jobs:
 
       - id: set-matrix
         run: |
-          sites=$(ls -d viscera/content/*/ | xargs -n 1 basename)
+          sites=$(ls -d content/*/ | xargs -n 1 basename)
           echo "matrix={\"site\":$(echo $sites | jq -R 'split(\" \")' | jq -c 'map(select(length > 0))')}" >> $GITHUB_OUTPUT
 
   deploy:
     needs: list-sites
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     strategy:
       max-parallel: 1
       matrix: ${{ fromJson(needs.list-sites.outputs.matrix) }}
@@ -38,10 +42,25 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
-        working-directory: ./viscera
+
+      - name: Provision Repository for ${{ matrix.site }}
+        env:
+          GH_TOKEN: ${{ secrets.LUKE_QUARTZ_ORG_ADMIN_TOKEN }}
+          ORG_NAME: luke-quartz
+        shell: bash
+        run: |
+          repo_name="${{ matrix.site }}"
+          echo "Checking for repository: $ORG_NAME/$repo_name"
+          if gh repo view "$ORG_NAME/$repo_name" >/dev/null 2>&1; then
+            echo "Repository $ORG_NAME/$repo_name already exists. Skipping."
+          else
+            echo "Repository $ORG_NAME/$repo_name does not exist. Creating..."
+            gh repo create "$ORG_NAME/$repo_name" --public --description "Deployment target for the '${{ matrix.site }}' Quartz site."
+            echo "Successfully created repository $ORG_NAME/$repo_name."
+          fi
 
       - name: Build Site - ${{ matrix.site }}
-        run: npx quartz build --directory "viscera/content/${{ matrix.site }}"
+        run: npx quartz build --directory "content/${{ matrix.site }}"
 
       - name: Deploy to luke-quartz/${{ matrix.site }}
         uses: peaceiris/actions-gh-pages@v4
