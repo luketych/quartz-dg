@@ -6,6 +6,8 @@ This repository has been heavily customized to support a multi-site architecture
 
 The primary motivation for this setup is to deploy each site to its own unique, clean URL (e.g., `https://luke-quartz.github.io/site-one/`) rather than having them all live under the source repository's URL (`https://luketych.github.io/quartz-dg/...`). To achieve this, each site is deployed to a dedicated repository within the `luke-quartz` GitHub organization.
 
+This works because GitHub Pages serves content from a repository at the URL `https://<organization-name>.github.io/<repository-name>`. By deploying the content for `site-one` to a repository named `luke-quartz/site-one`, its final, public URL automatically becomes `https://luke-quartz.github.io/site-one/`. The workflow handles this entire process, ensuring each site gets its own clean, predictable URL.
+
 ### Local Workflow: Adding and Syncing Content
 
 1.  **Add/Edit Content**: All website content lives in subdirectories within the `content/` folder (e.g., `content/site-one`, `content/site-two`). Make your changes here as you normally would.
