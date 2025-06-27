@@ -18,9 +18,11 @@ jobs:
         uses: actions/checkout@v4
 
       - id: set-matrix
+        shell: bash
         run: |
           sites=$(ls -d content/*/ | xargs -n 1 basename)
-          echo "matrix={\"site\":$(echo $sites | jq -R 'split(\" \")' | jq -c 'map(select(length > 0))')}" >> $GITHUB_OUTPUT
+          json_array=$(echo "$sites" | jq -R . | jq -s -c .)
+          echo "matrix={\"site\": $json_array}" >> $GITHUB_OUTPUT
 
   deploy:
     needs: list-sites
