@@ -58,7 +58,7 @@ jobs:
 
       - name: Build Root Site
         env:
-          BASE_URL: "" # For root org page, base URL is empty
+          BASE_URL: "https://luke-quartz.github.io"
         run: |
           mkdir -p temp_content
           cp content/index.md temp_content/
@@ -114,6 +114,8 @@ jobs:
           fi
 
       - name: Build Site - ${{ matrix.site }}
+        env:
+          BASE_URL: "https://luke-quartz.github.io/${{ matrix.site }}"
         run: npx quartz build --directory "content/${{ matrix.site }}"
 
       - name: Deploy to luke-quartz/${{ matrix.site }}
