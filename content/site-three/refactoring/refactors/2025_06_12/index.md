@@ -1,0 +1,1 @@
+The purpose of this refactor is mainly to reorganize the files and code so that everything is easier to understand, and more flexible for future changes. For example, when we add new feathersjs features, or want to make logging, error handling more centralized/universal, or if we want to start migrating away from feathersjs.
