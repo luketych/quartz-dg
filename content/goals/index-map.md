@@ -1,1 +1,0 @@
-![[../attachments/drawio/goals.svg]]

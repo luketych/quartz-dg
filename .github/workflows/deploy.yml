@@ -1,0 +1,61 @@
+name: Deploy All Quartz Sites
+
+on:
+  push:
+    branches:
+      - v4 # Or your main branch
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build all sites into subfolders
+        run: |
+          # This script runs inside the 'viscera' directory
+          # Create a directory to hold all built sites first
+          mkdir -p "all-sites"
+
+          SITES=$(ls -d content/*/)
+          for site_path in $SITES
+          do
+            site_name=$(basename "$site_path")
+            echo "--- Building site: $site_name ---"
+            
+            # Set the base URL for this specific build (e.g., /my-repo/site-name)
+            export BASE_URL="/${{ github.event.repository.name }}/$site_name"
+            echo "Using BASE_URL: $BASE_URL"
+            
+            # Run the build, pointing to the content folder inside 'viscera'
+            npx quartz build -d "content/$site_name"
+            
+            # Move the built files to a directory named after the site
+            echo "Moving public/* to all-sites/$site_name"
+            mkdir -p "all-sites/$site_name"
+            mv public/* "all-sites/$site_name"
+          done
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload the directory that contains all the built sites
+          path: ./all-sites
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
