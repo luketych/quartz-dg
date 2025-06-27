@@ -71,6 +71,7 @@ jobs:
           external_repository: luke-quartz/luke-quartz.github.io
           publish_dir: ./public
           publish_branch: main # Org pages deploy from main branch
+          force_orphan: true
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
           commit_message: "Deploy root site: ${{ github.sha }}"
