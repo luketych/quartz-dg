@@ -39,6 +39,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Install Dependencies
+        run: npm install
+
       - name: Provision Root Repository
         env:
           GH_TOKEN: ${{ secrets.LUKE_QUARTZ_ORG_ADMIN_TOKEN }}
