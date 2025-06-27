@@ -3,7 +3,7 @@ name: Deploy All Quartz Sites
 on:
   push:
     branches:
-      - v4 # Or your main branch
+      - luke
   workflow_dispatch:
 
 jobs:
