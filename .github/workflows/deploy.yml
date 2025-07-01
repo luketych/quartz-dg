@@ -57,6 +57,13 @@ jobs:
             echo "Repository $ORG_NAME/$REPO_NAME already exists."
           fi
 
+      - name: Create Root Index Page
+        run: |
+          mkdir -p content
+          echo "# Digital Gardens" > content/index.md
+          echo "" >> content/index.md
+          echo "Welcome to my collection of digital gardens, powered by Quartz." >> content/index.md
+
       - name: Build Root Site
         env:
           BASE_URL: "https://luke-quartz.github.io"
