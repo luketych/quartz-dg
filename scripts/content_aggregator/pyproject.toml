@@ -1,0 +1,11 @@
+[project]
+name = "content-aggregator"
+version = "0.1.0"
+description = "A script to aggregate content for Quartz."
+dependencies = [
+    "python-dotenv",
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"

@@ -1,0 +1,8 @@
+{
+	"nodes":[
+		{"id":"ae5f0b28b7d3d481","type":"file","file":"features/actionable/sorting-support.md","x":-206,"y":-121,"width":400,"height":400},
+		{"id":"ac2be5dd03bf2e21","type":"file","file":"features/waiting-for_review/for_review/all-action-type-filter.md","x":-120,"y":400,"width":400,"height":380},
+		{"id":"97ee3d972e2863de","type":"file","file":"features/someday-maybe/sort-controls-ui.md","x":360,"y":-160,"width":400,"height":400}
+	],
+	"edges":[]
+}

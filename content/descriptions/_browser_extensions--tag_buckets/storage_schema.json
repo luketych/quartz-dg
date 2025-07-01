@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "URL Tagger Data Schema",
+  "type": "object",
+  "description": "Schema for storing tagged URLs with metadata.",
+  "patternProperties": {
+    "^https?://.*$": {
+      "type": "object",
+      "properties": {
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "title": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tags",
+        "title",
+        "createdAt"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "https://example.com": {
+        "tags": [
+          "research",
+          "design"
+        ],
+        "title": "Example Site",
+        "createdAt": "2025-05-23T12:00:00Z",
+        "notes": "Optional user notes."
+      }
+    }
+  ]
+}

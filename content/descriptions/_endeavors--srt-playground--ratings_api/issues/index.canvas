@@ -1,0 +1,8 @@
+{
+	"nodes":[
+		{"id":"902db02d9c51fa8d","type":"file","file":"issues/archive/mocha_glob_pattern_run_cmd_solution.md","x":208,"y":-220,"width":572,"height":546},
+		{"id":"56639e35fb630f55","type":"file","file":"issues/waiting-for_review/infinite_loop_on_fetch.md","x":-380,"y":-260,"width":500,"height":440},
+		{"id":"b5c367b36efd20f2","type":"file","file":"issues/relieved/nodemon_race_condition_backend_manager.md","x":-440,"y":326,"width":620,"height":554}
+	],
+	"edges":[]
+}

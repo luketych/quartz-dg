@@ -99,7 +99,7 @@ jobs:
 
       - name: Provision Repository for ${{ matrix.site }}
         env:
-          GH_TOKEN: ${{ secrets.LUKE_QUARTZ_ORG_ADMIN_TOKEN }}
+          GH_TOKEN: ${{ secrets.LUKE_QUARTZ_ORG_ADMIN_TOKEN }} # actionlint-disable
           ORG_NAME: luke-quartz
         shell: bash
         run: |
