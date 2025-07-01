@@ -3,7 +3,8 @@ name: Build and Deploy to Organization Repos
 on:
   push:
     branches:
-      - feature-unique_urls
+      - '**'
+      - '!v*'
   workflow_dispatch:
 
 jobs:
