@@ -1,0 +1,75 @@
+.DS_Store
+node_modules
+public
+prof
+tsconfig.tsbuildinfo
+.obsidian
+.quartz-cache
+private/
+.replit
+replit.nix
+
+# Ignore generated script from content aggregator
+aggregator_script.sh
+
+# Ignore python cache files
+**/__pycache__/
+*.pyc
+#!/usr/bin/env bash
+
+TARGET="${1:-$HOME/Dev}"
+
+EXCLUDES=(
+  --exclude='node_modules'
+  --exclude='.yarn'
+  --exclude='.pnpm-store'
+  --exclude='.npm'
+  --exclude='bower_components'
+
+  --exclude='.venv'
+  --exclude='venv'
+  --exclude='__pycache__'
+  --exclude='.pytest_cache'
+  --exclude='.mypy_cache'
+  --exclude='.ruff_cache'
+
+  --exclude='dist'
+  --exclude='build'
+  --exclude='.next'
+  --exclude='.nuxt'
+  --exclude='.turbo'
+  --exclude='.cache'
+  --exclude='coverage'
+
+  --exclude='.DS_Store'
+  --exclude='.Trash'
+)
+
+echo "Scanning folder:"
+echo "$TARGET"
+echo
+
+echo "Total size excluding reproducible/cache folders:"
+du -sh "${EXCLUDES[@]}" "$TARGET"
+
+echo
+echo "Top-level folders by size, excluding reproducible/cache folders:"
+du -h -d 1 "${EXCLUDES[@]}" "$TARGET" | sort -hr
+
+echo
+echo "Excluded patterns:"
+printf '  %s\n' "${EXCLUDES[@]#--exclude=}"
+
+echo
+echo "Done."
+
+# Ignore environment files
+.env
+
+# Ignore aggregated content and backups
+content/
+content.bak-*/
+
+__pycache__/
+*.pyc
+content/codebases/_playground--n8n--n8n-events-mock_data/viscera/data/historical_crypto/*.csv

@@ -7,8 +7,8 @@ from config import get_config
 from find_codebases import find_codebases
 from utils.sanitize_path_to_name import sanitize_path_to_name
 
-def generate_script(codebase_paths: list[Path], quartz_content_dir: Path) -> str:
-    """Generates the final, executable shell script content."""
+def generate_script(codebase_paths: list[Path], quartz_content_dir: Path, content_types: list[str]) -> str:
+    """Generates the final, executable shell script content based on the configured content types."""
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
     backup_dir = quartz_content_dir.parent / f"{quartz_content_dir.name}.bak-{timestamp}"
 
@@ -18,9 +18,9 @@ def generate_script(codebase_paths: list[Path], quartz_content_dir: Path) -> str
     commands.append("# 1. Backup old content and create fresh directories")
     commands.append(f"echo 'Backing up existing content directory to {backup_dir}...'" )
     commands.append(f"if [ -d '{quartz_content_dir}' ]; then mv '{quartz_content_dir}' '{backup_dir}'; fi")
-    commands.append(f"mkdir -p '{quartz_content_dir / 'codebases'}'")
-    commands.append(f"mkdir -p '{quartz_content_dir / 'descriptions'}'")
-    commands.append(f"mkdir -p '{quartz_content_dir / 'visceras'}'")
+    # Create directories for each configured content type
+    for content_type in content_types:
+        commands.append(f"mkdir -p '{quartz_content_dir / content_type}'")
     commands.append("")
 
     # 2. Copy content from source codebases
@@ -29,23 +29,13 @@ def generate_script(codebase_paths: list[Path], quartz_content_dir: Path) -> str
         sanitized_name = sanitize_path_to_name(codebase_path)
         commands.append(f"echo 'Processing {codebase_path}'")
 
-        # Define source paths
-        source_desc_path = codebase_path / 'descriptions'
-        source_visc_path = codebase_path / 'viscera'
+        # Copy each configured content type into its central directory
+        for content_type in content_types:
+            source_path = codebase_path / content_type
+            dest_path = quartz_content_dir / content_type / sanitized_name
+            # Check if the source directory exists before copying
+            commands.append(f"if [ -d '{source_path}' ]; then cp -R '{source_path}' '{dest_path}'; fi")
 
-        # Define destination paths
-        dest_codebase_path = quartz_content_dir / 'codebases' / sanitized_name
-        dest_desc_path = quartz_content_dir / 'descriptions' / sanitized_name
-        dest_visc_path = quartz_content_dir / 'visceras' / sanitized_name
-
-        # A. Copy the full codebase into the 'codebases' directory
-        commands.append(f"cp -R '{codebase_path}' '{dest_codebase_path}'")
-
-        # B. Copy the 'descriptions' folder into the central 'descriptions' directory
-        commands.append(f"cp -R '{source_desc_path}' '{dest_desc_path}'")
-
-        # C. Copy the 'viscera' folder into the central 'visceras' directory
-        commands.append(f"cp -R '{source_visc_path}' '{dest_visc_path}'")
         commands.append("") # Add a newline for readability
 
     commands.append("echo '--- Content Aggregation Complete ---'")
@@ -63,27 +53,41 @@ def main():
         action='store_true',
         help="Automatically approve the plan without interactive confirmation."
     )
+    parser.add_argument(
+        '--env',
+        type=str,
+        default='prod',
+        help="The environment to run in (prod or test)."
+    )
     args = parser.parse_args()
 
-    _, quartz_content_dir = get_config()
-    codebase_paths = find_codebases()
+    _, quartz_content_dir, content_types = get_config(env=args.env)
+    codebase_paths = find_codebases(env=args.env)
     num_codebases = len(codebase_paths)
 
     # --- Phase 1: Dry Run and Verification ---
     if not args.execute:
         print("--- Dry Run Plan ---")
-        print(f"\nFound {num_codebases} valid codebases to process.")
+        print(f"\nFound {num_codebases} valid codebases to process based on the presence of: {', '.join(content_types)}.")
         print("\nActions to be performed:")
         
         timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
         backup_dir_name = f"{quartz_content_dir.name}.bak-{timestamp}"
         print(f"1.  BACKUP: The existing '{quartz_content_dir}' directory will be moved to a backup location like '{quartz_content_dir.parent / backup_dir_name}'.")
-        print("2.  CREATE: 3 new directories will be created: 'codebases', 'descriptions', 'visceras'.")
-        print(f"3.  COPY: {num_codebases} projects will be copied.")
         
-        for path in codebase_paths[:5]:
-             sanitized_name = sanitize_path_to_name(path)
-             print(f"    - {path} -> {quartz_content_dir / 'codebases' / sanitized_name}")
+        # Create a list of directories to be created
+        dirs_to_create = content_types
+        print(f"2.  CREATE: {len(dirs_to_create)} new directories will be created: {', '.join(dirs_to_create)}.")
+
+        print(f"3.  COPY: The '{', '.join(content_types)}' from {num_codebases} projects will be copied.")
+        
+        # Display the copy plan for each codebase and content type
+        for src_path in codebase_paths[:5]: # Limit preview to first 5
+            for content_type in content_types:
+                sanitized_name = sanitize_path_to_name(src_path)
+                dest_path = quartz_content_dir / content_type / sanitized_name
+                print(f"    - {src_path / content_type} -> {dest_path}")
+        
         if num_codebases > 5:
             print(f"    ...and {num_codebases - 5} more.")
 
@@ -103,7 +107,7 @@ def main():
         print("\n✅ Plan approved. Generating final script...")
 
     # --- Phase 2 & 3: Script Generation and Final Output ---
-    script_content = generate_script(codebase_paths, quartz_content_dir)
+    script_content = generate_script(codebase_paths, quartz_content_dir, content_types)
     
     script_file = Path("aggregator_script.sh")
     script_file.write_text(script_content)
